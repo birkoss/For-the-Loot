@@ -49,7 +49,8 @@ class MainScene extends Phaser.Scene {
 
         this.player = {
             clickDamage: 9,
-            gold: 0
+            gold: 40,
+            DPSDamage: 0
         };
 
         /* Generate the text damages sprites and tweens */
@@ -91,6 +92,40 @@ class MainScene extends Phaser.Scene {
 
             this.coins.add(coin);
         }
+
+        this.buttons = [];
+        let button = new CustomButton(this, "");
+        button.x = 100;
+        button.y = 200;
+        button.cost = 5;
+        button.type = "attack";
+
+        button.setLabel(this.player.clickDamage); 
+
+        button.on("BUTTON_CLICKED", this.onButtonClicked, this);
+        this.buttons.push(button);
+
+        this.add.existing(button);
+
+        button = new CustomButton(this, "");
+        button.x = 100;
+        button.y = 250;
+        button.cost = 25;
+        button.type = "dps";
+
+        button.setLabel(this.player.DPSDamage); 
+
+        button.on("BUTTON_CLICKED", this.onButtonClicked, this);
+        this.buttons.push(button);
+
+        this.add.existing(button);
+
+        this.dpsTimer = this.time.addEvent({
+            delay: 100,
+            loop: true,
+            callback: this.onDPS,
+            callbackScope: this,
+        });
     }
 
     update() {
@@ -99,15 +134,19 @@ class MainScene extends Phaser.Scene {
 
     showEnemy() {
         let enemy_index = Phaser.Math.Between(0, this.enemies.countActive() - 1);
-        let enemy = this.enemies.getChildren()[enemy_index];
-        enemy.revive();
-        enemy.alpha = 1;
+        this.current_enemy = this.enemies.getChildren()[enemy_index];
+        this.current_enemy.revive();
+        this.current_enemy.alpha = 1;
 
-        this.enemy_name.setText( enemy.unitData.id );
-        this.enemy_health.setText( enemy.health + " HP" );
+        this.enemy_name.setText( this.current_enemy.unitData.id );
+        this.enemy_health.setText( this.current_enemy.health + " HP" );
     }
 
     onEnemyClicked(enemy) {
+        if (!enemy.isAlive()) {
+            return;
+        }
+
         let dmgText = this.textDamagePool.get(0, 0);
         this.textDamagePool.remove(dmgText);
 
@@ -127,7 +166,7 @@ class MainScene extends Phaser.Scene {
     onEnemyKilled(enemy) {
         enemy.alpha = 0;
 
-        let coin = this.coins.get(enemy.x + Phaser.Math.Between(-100, 100), enemy.y);
+        let coin = this.coins.get(enemy.x + Phaser.Math.Between(-100, 100), enemy.y + 60);
         this.coins.remove(coin);
         coin.alpha = 1;
         coin.setActive(true);
@@ -157,6 +196,32 @@ class MainScene extends Phaser.Scene {
         coin.setAlpha(0);
         coin.setActive(false);
         this.coins.add(coin);
+    }
+
+    onButtonClicked(button) {
+        if (this.player.gold - button.cost >= 0) {
+            this.player.gold -= button.cost;
+            this.player_gold.setText(this.player.gold + " GOLD");
+
+            if (button.type == "attack") {
+                this.player.clickDamage++;
+                button.setLabel(this.player.clickDamage);
+            } else {
+                this.player.DPSDamage++;
+                button.setLabel(this.player.DPSDamage);
+            }
+        }
+    }
+
+    onDPS() {
+        if (this.player.DPSDamage > 0 && this.current_enemy.isAlive()) {
+            var dmg = this.player.DPSDamage / 10;
+            this.current_enemy.damage(dmg);
+
+            if (this.current_enemy.health > 0) {
+                this.enemy_health.setText(Math.round(this.current_enemy.health) + ' HP');
+            }
+        }
     }
 
  

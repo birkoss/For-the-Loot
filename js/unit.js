@@ -40,9 +40,13 @@ class Unit extends Phaser.GameObjects.Container {
 
     damage(amount) {
         this.health = Math.max(0, this.health - amount);
-        if (this.health <= 0) {
+        if (!this.isAlive()) {
             this.emit("UNIT_KILLED", this);
         }
+    }
+
+    isAlive() {
+        return this.health > 0;
     }
 
     animate() {
