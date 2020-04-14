@@ -48,25 +48,24 @@ class MainScene extends Phaser.Scene {
         };
 
         this.textDamagePool = this.add.group();
+        var radius = 120;
+
         for (var d=0; d<50; d++) {
             let dmgText = this.add.bitmapText(0, 0, "font:gui", d, 50);
+            dmgText.setOrigin(0.5);
             dmgText.poolIndex = d;
             dmgText.setActive(false);
             dmgText.setAlpha(0);
+            var angle = Math.random()*Math.PI*2;
             dmgText.tween = this.tweens.add({
                 targets: dmgText,
                 alpha: 0,
-                y: 100,
-                x: Phaser.Math.Between(100, 300),
+                y: (Math.sin(angle)*radius),
+                x: (Math.cos(angle)*radius),
                 duration: 1000,
                 ease: 'Cubic',
                 paused: true,
-                onStart: function() {
-                    console.log("onStart: " + dmgText.poolIndex);
-                },
                 onComplete: function() {
-                    console.log("onComplete: " + dmgText.poolIndex);
-                    dmgText.tween.stop();
                     dmgText.setActive(false);
                     this.textDamagePool.add(dmgText);
                 },
@@ -93,19 +92,15 @@ class MainScene extends Phaser.Scene {
     }
 
     onEnemyClicked(enemy) {
-        let dmgText = this.textDamagePool.get(enemy.x, enemy.y);
+        let dmgText = this.textDamagePool.get(0, 0);
         this.textDamagePool.remove(dmgText);
-        console.log("onEnemyClicked: " + dmgText.poolIndex + " @ " + dmgText.active + " / " + dmgText.tween.isPlaying() + "," + dmgText.tween.isPaused() + " # " + dmgText.tween.paused + " $ " + this.tweens.getAllTweens().length + " ... " + dmgText.tween.totalProgress);
 
+        enemy.add(dmgText);
         
-        //dmgText.setText(this.player.clickDamage);
+        dmgText.setText(this.player.clickDamage);
         dmgText.setAlpha(1);
         dmgText.setActive(true);
-        //dmgText.tween.restart();
         dmgText.tween.play();
-
-        console.log(dmgText.tween.hasStarted);
-        //console.log(this.tweens.getAllTweens());
 
         enemy.damage(this.player.clickDamage);
         if (enemy.health > 0) {
