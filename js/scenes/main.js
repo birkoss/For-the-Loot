@@ -26,6 +26,11 @@ class MainScene extends Phaser.Scene {
         this.enemy_health.tint = 0xd4d8e9;
         this.ui.add(this.enemy_health);
 
+        this.player_gold = this.add.bitmapText(100, 200, "font:gui", "0 GOLD", 20);
+        this.player_gold.setOrigin(0.5);
+        this.player_gold.tint = 0xd4d8e9;
+        this.ui.add(this.player_gold);
+
         this.enemies = this.add.group();
         ['skeleton', 'knight', 'rogue', 'archer'].forEach(single_unit => {
             let enemy = new Unit(this, single_unit, 100);
@@ -43,13 +48,13 @@ class MainScene extends Phaser.Scene {
         this.showEnemy();
 
         this.player = {
-            clickDamage: 1,
+            clickDamage: 9,
             gold: 0
         };
 
+        /* Generate the text damages sprites and tweens */
         this.textDamagePool = this.add.group();
         var radius = 120;
-
         for (var d=0; d<50; d++) {
             let dmgText = this.add.bitmapText(0, 0, "font:gui", d, 50);
             dmgText.setOrigin(0.5);
@@ -75,6 +80,17 @@ class MainScene extends Phaser.Scene {
             this.textDamagePool.add(dmgText);
         }
 
+        this.coins = this.add.group();
+        for (var i=0; i<50; i++) {
+            let coin = new Coin(this);
+            coin.x = 0;
+            coin.y = 0;
+            coin.on("COIN_CLICKED", this.onCoinSelected, this);
+            coin.alpha = 0;
+            coin.setActive(false);
+
+            this.coins.add(coin);
+        }
     }
 
     update() {
@@ -111,11 +127,36 @@ class MainScene extends Phaser.Scene {
     onEnemyKilled(enemy) {
         enemy.alpha = 0;
 
+        let coin = this.coins.get(enemy.x + Phaser.Math.Between(-100, 100), enemy.y);
+        this.coins.remove(coin);
+        coin.alpha = 1;
+        coin.setActive(true);
+        this.time.addEvent({
+            delay: 3000,
+            callback: this.onCoinSelected,
+            callbackScope: this,
+            args: [coin]
+        });
+
         this.showEnemy();
     }
 
     onEnemyRevived(enemy) {
 
+    }
+
+    onCoinSelected(coin) {
+        if (!coin.active) {
+            return;
+        }
+
+        this.player.gold += coin.goldValue;
+
+        this.player_gold.setText(this.player.gold + " GOLD");
+        
+        coin.setAlpha(0);
+        coin.setActive(false);
+        this.coins.add(coin);
     }
 
  

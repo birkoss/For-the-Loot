@@ -30,9 +30,6 @@ class Unit extends Phaser.GameObjects.Container {
         this.background.setInteractive();
         this.background.on("pointerdown", this.onPointerDown, this);
 
-        this.x += this.background.width / 2;
-        this.y += this.background.height / 2;
-
         this.direction = -1;
     }
 
