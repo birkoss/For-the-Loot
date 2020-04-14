@@ -38,6 +38,7 @@ class Unit extends Phaser.GameObjects.Container {
 
     revive() {
         this.health = this.maxHealth;
+        this.emit("UNIT_REVIVED", this);
     }
 
     damage(amount) {
